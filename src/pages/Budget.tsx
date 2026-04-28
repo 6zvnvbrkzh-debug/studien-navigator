@@ -14,6 +14,8 @@ import { CATEGORY_COLORS, CATEGORY_ICONS } from "@/lib/categories";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Transaction } from "@/hooks/useTransactions";
+import { CategoryBudgetsSection } from "@/components/CategoryBudgetsSection";
+import { RecurringSection } from "@/components/RecurringSection";
 
 function exportCsv(transactions: Transaction[], month: string) {
   const rows = transactions.filter((tx) => tx.occurred_on.startsWith(month));
@@ -130,6 +132,11 @@ export default function Budget() {
             </div>
           )}
         </Card>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        <CategoryBudgetsSection monthTx={monthTx} />
+        <RecurringSection onChanged={refresh} />
       </div>
 
       {/* CSV Export — premium only */}

@@ -13,6 +13,7 @@ import Bafoeg from "./pages/Bafoeg";
 import Jobs from "./pages/Jobs";
 import Marketplace from "./pages/Marketplace";
 import Profile from "./pages/Profile";
+import Goals from "./pages/Goals";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound.tsx";
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/app" element={<ProtectedRoute />}>
               <Route index element={<Dashboard />} />
               <Route path="budget" element={<Budget />} />
+              <Route path="goals" element={<Goals />} />
               <Route path="bafoeg" element={<Bafoeg />} />
               <Route path="jobs" element={<Jobs />} />
               <Route path="marketplace" element={<Marketplace />} />
