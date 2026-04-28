@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CheckCircle2, Lightbulb, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, Lightbulb, Plus, Trash2, ExternalLink, FileText, Handshake } from "lucide-react";
 import { toast } from "sonner";
 
 const STEPS = ["step1", "step2", "step3", "step4"] as const;
@@ -73,6 +73,54 @@ export default function Bafoeg() {
         <h1 className="text-2xl sm:text-3xl font-bold">{t("bafoeg.title")}</h1>
         <p className="text-muted-foreground mt-1">{t("bafoeg.subtitle")}</p>
       </div>
+
+      <Card className="p-6">
+        <h2 className="font-semibold mb-1">{t("bafoeg.applyTitle")}</h2>
+        <p className="text-sm text-muted-foreground mb-4">{t("bafoeg.applySubtitle")}</p>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <a
+            href="https://www.bafoeg-digital.de/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-start gap-3 p-4 rounded-xl border bg-card hover:border-primary hover:bg-secondary transition-colors"
+          >
+            <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium">{t("bafoeg.officialTitle")}</span>
+                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("bafoeg.officialDesc")}</p>
+              <span className="inline-block mt-2 text-[10px] font-medium uppercase tracking-wide text-primary">
+                {t("bafoeg.officialBadge")}
+              </span>
+            </div>
+          </a>
+
+          <a
+            href="https://www.meinbafoeg.de/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-start gap-3 p-4 rounded-xl border bg-card hover:border-primary hover:bg-secondary transition-colors"
+          >
+            <div className="w-10 h-10 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0">
+              <Handshake className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium">{t("bafoeg.partnerTitle")}</span>
+                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("bafoeg.partnerDesc")}</p>
+              <span className="inline-block mt-2 text-[10px] font-medium uppercase tracking-wide text-accent">
+                {t("bafoeg.partnerBadge")}
+              </span>
+            </div>
+          </a>
+        </div>
+      </Card>
 
       <Card className="p-6">
         <h2 className="font-semibold mb-4">{t("bafoeg.steps")}</h2>
