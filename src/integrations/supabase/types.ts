@@ -14,7 +14,236 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          applied_at: string
+          id: string
+          job_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          applied_at?: string
+          id?: string
+          job_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          applied_at?: string
+          id?: string
+          job_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bafoeg_checklist: {
+        Row: {
+          completed: boolean
+          id: string
+          item_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          id?: string
+          item_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          id?: string
+          item_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bafoeg_deadlines: {
+        Row: {
+          created_at: string
+          due_date: string
+          id: string
+          notes: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      jobs: {
+        Row: {
+          apply_url: string | null
+          city: string
+          company: string
+          created_at: string
+          description: string | null
+          hourly_wage: number | null
+          id: string
+          remote: boolean
+          title: string
+        }
+        Insert: {
+          apply_url?: string | null
+          city: string
+          company: string
+          created_at?: string
+          description?: string | null
+          hourly_wage?: number | null
+          id?: string
+          remote?: boolean
+          title: string
+        }
+        Update: {
+          apply_url?: string | null
+          city?: string
+          company?: string
+          created_at?: string
+          description?: string | null
+          hourly_wage?: number | null
+          id?: string
+          remote?: boolean
+          title?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          bafoeg_status: string | null
+          created_at: string
+          display_name: string | null
+          hochschule: string | null
+          id: string
+          language: string | null
+          monthly_budget: number | null
+          onboarding_completed: boolean | null
+          premium_until: string | null
+          savings_goal: number | null
+          semester: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bafoeg_status?: string | null
+          created_at?: string
+          display_name?: string | null
+          hochschule?: string | null
+          id?: string
+          language?: string | null
+          monthly_budget?: number | null
+          onboarding_completed?: boolean | null
+          premium_until?: string | null
+          savings_goal?: number | null
+          semester?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bafoeg_status?: string | null
+          created_at?: string
+          display_name?: string | null
+          hochschule?: string | null
+          id?: string
+          language?: string | null
+          monthly_budget?: number | null
+          onboarding_completed?: boolean | null
+          premium_until?: string | null
+          savings_goal?: number | null
+          semester?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscribers: {
+        Row: {
+          email: string
+          id: string
+          stripe_customer_id: string | null
+          subscribed: boolean
+          subscription_end: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          email: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          email?: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          id: string
+          note: string | null
+          occurred_on: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          occurred_on?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          occurred_on?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
