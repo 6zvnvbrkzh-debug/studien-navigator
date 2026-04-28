@@ -42,9 +42,23 @@ export default function Profile() {
   const [cancelEndsAt, setCancelEndsAt] = useState<Date | null>(null);
   const [canceled, setCanceled] = useState(false);
 
-  // Surface the period-end date persistently after refresh — it lives in profile.premium_until
-  const persistedEndsAt = profile?.premium_until ? new Date(profile.premium_until) : null;
-  const endsAt = cancelEndsAt ?? persistedEndsAt;
+  // Load persistent cancel state from subscribers so it survives reloads
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("subscribers")
+      .select("cancel_at_period_end, subscription_end")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.cancel_at_period_end && data.subscription_end) {
+          setCanceled(true);
+          setCancelEndsAt(new Date(data.subscription_end));
+        }
+      });
+  }, [user]);
+
+  const endsAt = cancelEndsAt;
 
   useEffect(() => {
     if (profile) {
