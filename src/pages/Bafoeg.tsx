@@ -1,6 +1,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -186,7 +187,13 @@ export default function Bafoeg() {
                   <div className="font-medium text-sm">{d.title}</div>
                   <div className="text-xs text-muted-foreground">{new Date(d.due_date).toLocaleDateString()}</div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => removeDeadline(d.id)}><Trash2 className="w-4 h-4 text-muted-foreground" /></Button>
+                <DeleteConfirmDialog
+                  description={t("deleteConfirm.descDeadline")}
+                  onConfirm={() => removeDeadline(d.id)}
+                  trigger={
+                    <Button variant="ghost" size="icon"><Trash2 className="w-4 h-4 text-muted-foreground" /></Button>
+                  }
+                />
               </li>
             ))}
           </ul>

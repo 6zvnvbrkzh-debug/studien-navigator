@@ -69,7 +69,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <LanguageSwitcher />
         </header>
 
-        <main className="flex-1 pb-20 lg:pb-0 animate-fade-in">{children}</main>
+        <main key={location.pathname} className="flex-1 pb-20 lg:pb-0 animate-fade-in">{children}</main>
 
         {/* Bottom nav mobile */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-card border-t z-30">

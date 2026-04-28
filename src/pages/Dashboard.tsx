@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useProfile } from "@/hooks/useProfile";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useRoles } from "@/hooks/useRoles";
 import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import { Card } from "@/components/ui/card";
 import { TrendingDown, TrendingUp, Sparkles, Target, Flame } from "lucide-react";
@@ -9,11 +10,19 @@ import { PremiumGate, PremiumBadge } from "@/components/PremiumGate";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const { profile } = useProfile();
-  const { transactions, refresh } = useTransactions();
+  const { profile, loading: profileLoading } = useProfile();
+  const { transactions, loading: txLoading } = useTransactions();
+  const { isPremium } = useRoles();
   const { user } = useAuth();
   const [deadlines, setDeadlines] = useState<Array<{ id: string; title: string; due_date: string }>>([]);
 
@@ -50,10 +59,7 @@ export default function Dashboard() {
 
   const insights = useMemo(() => {
     const out: string[] = [];
-    if (monthData.count === 0) {
-      out.push(t("insights.noData"));
-      return out;
-    }
+    if (monthData.count === 0) { out.push(t("insights.noData")); return out; }
     if (budget > 0) {
       if (remaining >= 0) out.push(t("insights.onTrack", { amount: remaining.toFixed(0) }));
       else out.push(t("insights.overBudget", { amount: Math.abs(remaining).toFixed(0) }));
@@ -66,13 +72,10 @@ export default function Dashboard() {
       const rentPct = Math.round((rent / monthData.expenses) * 100);
       if (rentPct >= 35) out.push(t("insights.rentHigh", { percent: rentPct }));
     }
-    if (savingsGoal > 0 && saved > 0) {
-      out.push(t("insights.savingsProgress", { percent: savingsPct }));
-    }
+    if (savingsGoal > 0 && saved > 0) out.push(t("insights.savingsProgress", { percent: savingsPct }));
     return out.slice(0, 3);
   }, [monthData, budget, remaining, t, savingsGoal, saved, savingsPct]);
 
-  // Streak: distinct days with a transaction in the last 7 days
   const streak = useMemo(() => {
     const days = new Set(transactions.map((t) => t.occurred_on));
     let s = 0;
@@ -85,7 +88,23 @@ export default function Dashboard() {
     return s;
   }, [transactions]);
 
-  // Premium-only: forecast, top category, daily avg, monthly trend
+  // Multi-month trend — last 6 months for premium, 2 for free
+  const monthsToShow = isPremium ? 6 : 2;
+  const trendData = useMemo(() => {
+    const now = new Date();
+    return Array.from({ length: monthsToShow }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (monthsToShow - 1 - i), 1);
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString(undefined, { month: "short" });
+      const expenses = transactions
+        .filter((t) => t.type === "expense" && t.occurred_on.startsWith(ym))
+        .reduce((s, t) => s + Number(t.amount), 0);
+      return { label, expenses };
+    });
+  }, [transactions, monthsToShow]);
+
+  const hasTrendData = trendData.some((d) => d.expenses > 0);
+
   const premiumInsights = useMemo(() => {
     if (monthData.count === 0) return null;
     const now = new Date();
@@ -96,7 +115,6 @@ export default function Dashboard() {
     const sorted = Object.entries(monthData.byCat).sort((a, b) => b[1] - a[1]);
     const top = sorted[0];
     const topPct = top && monthData.expenses > 0 ? Math.round((top[1] / monthData.expenses) * 100) : 0;
-    // last month total
     const lastMonthYm = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().slice(0, 7);
     const lastMonthExp = transactions
       .filter((t) => t.type === "expense" && t.occurred_on.startsWith(lastMonthYm))
@@ -109,6 +127,21 @@ export default function Dashboard() {
     return { avgDaily, forecast, top, topPct, trend };
   }, [monthData, transactions]);
 
+  const loading = profileLoading || txLoading;
+
+  if (loading) {
+    return (
+      <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-6">
+        <div className="h-8 bg-secondary rounded animate-pulse w-56" />
+        <div className="h-36 bg-secondary rounded-2xl animate-pulse" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-secondary rounded-xl animate-pulse" />)}
+        </div>
+        <div className="h-48 bg-secondary rounded-xl animate-pulse" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-6">
       <div className="flex items-end justify-between gap-4">
@@ -116,19 +149,24 @@ export default function Dashboard() {
           <h1 className="text-2xl sm:text-3xl font-bold">
             {profile?.display_name ? `${t("dashboard.greeting")}, ${profile.display_name} 👋` : t("dashboard.greetingNoName")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">{new Date().toLocaleDateString(undefined, { dateStyle: "long" })}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {new Date().toLocaleDateString(undefined, { dateStyle: "long" })}
+          </p>
         </div>
         <div className="hidden sm:block">
-          <AddTransactionDialog onSaved={refresh} />
+          <AddTransactionDialog />
         </div>
       </div>
 
       {/* Budget summary */}
       <Card className="p-6 bg-[var(--gradient-primary)] text-primary-foreground border-0">
         <div className="text-sm opacity-90">{t("dashboard.remaining")}</div>
-        <div className="text-4xl font-bold mt-1">€ {remaining.toFixed(2)}</div>
+        <div className="text-4xl font-bold mt-1 tabular-nums">€ {remaining.toFixed(2)}</div>
         <div className="mt-4 h-2 bg-white/20 rounded-full overflow-hidden">
-          <div className="h-full bg-white" style={{ width: `${budget > 0 ? Math.min(100, (monthData.expenses / budget) * 100) : 0}%` }} />
+          <div
+            className="h-full bg-white transition-all duration-500"
+            style={{ width: `${budget > 0 ? Math.min(100, (monthData.expenses / budget) * 100) : 0}%` }}
+          />
         </div>
         <div className="mt-2 flex justify-between text-xs opacity-90">
           <span>{t("dashboard.spent")}: € {monthData.expenses.toFixed(2)}</span>
@@ -142,34 +180,91 @@ export default function Dashboard() {
           <div className="flex items-center gap-2 text-muted-foreground text-xs">
             <TrendingUp className="w-4 h-4 text-success" /> {t("dashboard.income")}
           </div>
-          <div className="text-xl font-bold mt-1">€ {monthData.income.toFixed(0)}</div>
+          <div className="text-xl font-bold mt-1 tabular-nums">€ {monthData.income.toFixed(0)}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-xs">
             <TrendingDown className="w-4 h-4 text-accent" /> {t("dashboard.expenses")}
           </div>
-          <div className="text-xl font-bold mt-1">€ {monthData.expenses.toFixed(0)}</div>
+          <div className="text-xl font-bold mt-1 tabular-nums">€ {monthData.expenses.toFixed(0)}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-xs">
             <Target className="w-4 h-4 text-primary" /> {t("dashboard.savingsGoal")}
           </div>
-          <div className="text-xl font-bold mt-1">{savingsPct}%</div>
-          <div className="mt-2 h-1.5 bg-secondary rounded-full overflow-hidden">
-            <div className="h-full bg-primary" style={{ width: `${savingsPct}%` }} />
+          <div className="text-xl font-bold mt-1 tabular-nums">{savingsPct}%</div>
+          <div className="mt-1.5 h-1.5 bg-secondary rounded-full overflow-hidden">
+            <div className="h-full bg-primary transition-all duration-500" style={{ width: `${savingsPct}%` }} />
           </div>
+          {savingsGoal > 0 && (
+            <div className="mt-1 text-xs text-muted-foreground tabular-nums">
+              € {saved.toFixed(0)} / € {savingsGoal.toFixed(0)}
+            </div>
+          )}
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-2 text-muted-foreground text-xs">
             <Flame className="w-4 h-4 text-warning" /> {t("dashboard.streak")}
           </div>
-          <div className="text-xl font-bold mt-1">{streak} <span className="text-sm font-normal text-muted-foreground">{t("dashboard.days")}</span></div>
+          <div className="text-xl font-bold mt-1">
+            {streak} <span className="text-sm font-normal text-muted-foreground">{t("dashboard.days")}</span>
+          </div>
         </Card>
       </div>
 
+      {/* Spending Trend */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold">{t("dashboard.spendingTrend")}</h2>
+          <span className="text-xs text-muted-foreground">
+            {isPremium ? t("dashboard.last6Months") : t("dashboard.last2Months")}
+          </span>
+        </div>
+        {!hasTrendData ? (
+          <p className="text-sm text-muted-foreground py-4 text-center">{t("dashboard.noTrendData")}</p>
+        ) : (
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trendData} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(217 91% 55%)" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="hsl(217 91% 55%)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="label" fontSize={11} tickLine={false} axisLine={false} />
+                <Tooltip
+                  formatter={(v: number) => [`€ ${v.toFixed(2)}`, t("dashboard.expenses")]}
+                  contentStyle={{ borderRadius: "0.75rem", border: "1px solid hsl(var(--border))", fontSize: 12 }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="expenses"
+                  stroke="hsl(217 91% 55%)"
+                  strokeWidth={2}
+                  fill="url(#trendGradient)"
+                  dot={{ r: 3, fill: "hsl(217 91% 55%)" }}
+                  activeDot={{ r: 5 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+        {!isPremium && (
+          <p className="text-xs text-muted-foreground mt-3 text-center">
+            <span className="text-primary font-medium cursor-pointer hover:underline" onClick={() => {}}>
+              Premium
+            </span>{" "}
+            — 6-Monats-Trend freischalten
+          </p>
+        )}
+      </Card>
+
       {/* Insights */}
       <Card className="p-6">
-        <h2 className="font-semibold flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary" />{t("dashboard.insights")}</h2>
+        <h2 className="font-semibold flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-primary" />{t("dashboard.insights")}
+        </h2>
         <ul className="mt-3 space-y-2">
           {insights.map((ins, i) => (
             <li key={i} className="text-sm text-foreground/80 p-3 bg-secondary rounded-lg">{ins}</li>
@@ -227,7 +322,7 @@ export default function Dashboard() {
             {deadlines.map((d) => (
               <li key={d.id} className="flex justify-between p-3 bg-secondary rounded-lg text-sm">
                 <span className="font-medium">{d.title}</span>
-                <span className="text-muted-foreground">{new Date(d.due_date).toLocaleDateString()}</span>
+                <span className="text-muted-foreground tabular-nums">{new Date(d.due_date).toLocaleDateString()}</span>
               </li>
             ))}
           </ul>
@@ -235,8 +330,8 @@ export default function Dashboard() {
       </Card>
 
       {/* Mobile FAB */}
-      <div className="sm:hidden fixed bottom-20 right-4 z-20">
-        <AddTransactionDialog onSaved={refresh} />
+      <div className="sm:hidden fixed bottom-24 right-4 z-20">
+        <AddTransactionDialog />
       </div>
     </div>
   );

@@ -1,24 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/lib/categories";
 import { toast } from "sonner";
+import { Transaction } from "@/hooks/useTransactions";
 
 interface Props {
   onSaved?: () => void;
   trigger?: React.ReactNode;
+  transaction?: Transaction;
 }
 
-export function AddTransactionDialog({ onSaved, trigger }: Props) {
+export function AddTransactionDialog({ onSaved, trigger, transaction }: Props) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const isEdit = !!transaction;
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<"income" | "expense">("expense");
   const [amount, setAmount] = useState<string>("");
@@ -29,7 +32,18 @@ export function AddTransactionDialog({ onSaved, trigger }: Props) {
 
   const cats = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
+  useEffect(() => {
+    if (open && transaction) {
+      setType(transaction.type);
+      setAmount(String(transaction.amount));
+      setCategory(transaction.category);
+      setDate(transaction.occurred_on);
+      setNote(transaction.note ?? "");
+    }
+  }, [open, transaction]);
+
   const reset = () => {
+    if (isEdit) return;
     setType("expense");
     setAmount("");
     setCategory("food");
@@ -40,51 +54,61 @@ export function AddTransactionDialog({ onSaved, trigger }: Props) {
   const save = async () => {
     if (!user || !amount) return;
     setBusy(true);
-    const { error } = await supabase.from("transactions").insert({
-      user_id: user.id,
+
+    const payload = {
       amount: Number(amount),
       type,
       category,
       note: note || null,
       occurred_on: date,
-    });
+    };
+
+    const { error } = isEdit
+      ? await supabase.from("transactions").update(payload).eq("id", transaction!.id)
+      : await supabase.from("transactions").insert({ ...payload, user_id: user.id });
+
     setBusy(false);
     if (error) {
       toast.error(error.message);
       return;
     }
+    toast.success(t("budget.saved"));
     setOpen(false);
     reset();
     onSaved?.();
   };
 
+  const defaultTrigger = isEdit ? (
+    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={t("budget.editTransaction")}>
+      <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+    </Button>
+  ) : (
+    <Button size="lg" className="rounded-full shadow-[var(--shadow-elevated)]">
+      <Plus className="w-4 h-4 mr-2" />
+      {t("budget.addTransaction")}
+    </Button>
+  );
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button size="lg" className="rounded-full shadow-[var(--shadow-elevated)]">
-            <Plus className="w-4 h-4 mr-2" />
-            {t("budget.addTransaction")}
-          </Button>
-        )}
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("budget.addTransaction")}</DialogTitle>
+          <DialogTitle>{isEdit ? t("budget.editTransaction") : t("budget.addTransaction")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => { setType("expense"); setCategory("food"); }}
-              className={`px-4 py-2 rounded-lg border text-sm font-medium ${type === "expense" ? "border-accent bg-accent/10 text-accent" : "border-border"}`}
+              onClick={() => { setType("expense"); if (!isEdit) setCategory("food"); }}
+              className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${type === "expense" ? "border-accent bg-accent/10 text-accent" : "border-border hover:bg-secondary"}`}
             >
               {t("budget.expense")}
             </button>
             <button
               type="button"
-              onClick={() => { setType("income"); setCategory("salary"); }}
-              className={`px-4 py-2 rounded-lg border text-sm font-medium ${type === "income" ? "border-success bg-success/10 text-success" : "border-border"}`}
+              onClick={() => { setType("income"); if (!isEdit) setCategory("salary"); }}
+              className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${type === "income" ? "border-success bg-success/10 text-success" : "border-border hover:bg-secondary"}`}
             >
               {t("budget.income")}
             </button>
