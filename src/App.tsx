@@ -13,6 +13,7 @@ import Bafoeg from "./pages/Bafoeg";
 import Jobs from "./pages/Jobs";
 import Marketplace from "./pages/Marketplace";
 import Profile from "./pages/Profile";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="jobs" element={<Jobs />} />
               <Route path="marketplace" element={<Marketplace />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="checkout/success" element={<CheckoutSuccess />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
