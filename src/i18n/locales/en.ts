@@ -239,6 +239,16 @@ export const en = {
     trend: "Trend vs. last month: {{trend}}",
     noData: "Not enough data yet for advanced analytics.",
   },
+  checkoutSuccess: {
+    title: "Premium unlocked 🎉",
+    subtitle: "Thanks for subscribing! All premium features are now available.",
+    feature1: "Advanced insights & forecasts",
+    feature2: "6-month trend & CSV export",
+    feature3: "Job match & all premium tools",
+    ctaPremium: "Explore premium features",
+    ctaProfile: "Manage subscription",
+    syncing: "Syncing your subscription…",
+  },
   common: {
     loading: "Loading...",
     error: "Something went wrong",
