@@ -60,6 +60,25 @@ Deno.serve(async (req) => {
       cancel_at_period_end: true,
     });
 
+    // Persist the cancel-at-period-end flag and end date so the UI can show it after reload
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const endIso = new Date(updated.current_period_end * 1000).toISOString();
+    await adminClient.from("subscribers").upsert({
+      user_id: user.id,
+      email: user.email,
+      stripe_customer_id: customerId,
+      subscribed: true,
+      subscription_end: endIso,
+      cancel_at_period_end: true,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
+    await adminClient.from("profiles").update({
+      premium_until: endIso,
+    }).eq("user_id", user.id);
+
     return new Response(
       JSON.stringify({ canceled: true, cancel_at: updated.current_period_end }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
