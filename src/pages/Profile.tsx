@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useRoles } from "@/hooks/useRoles";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,8 @@ import { useSearchParams } from "react-router-dom";
 export default function Profile() {
   const { t, i18n } = useTranslation();
   const { user, signOut } = useAuth();
-  const { profile, refresh, isPremium } = useProfile();
+  const { profile, refresh } = useProfile();
+  const { isPremium, refresh: refreshRoles } = useRoles();
   const [params, setParams] = useSearchParams();
 
   const [name, setName] = useState("");
@@ -44,7 +46,10 @@ export default function Profile() {
       toast.success(t("profile.premiumActive"));
       setParams({});
       // Re-check subscription
-      supabase.functions.invoke("check-subscription").then(() => refresh());
+      supabase.functions.invoke("check-subscription").then(() => {
+        refresh();
+        refreshRoles();
+      });
     }
   }, [params]);
 

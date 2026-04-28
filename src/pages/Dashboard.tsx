@@ -5,6 +5,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import { Card } from "@/components/ui/card";
 import { TrendingDown, TrendingUp, Sparkles, Target, Flame } from "lucide-react";
+import { PremiumGate, PremiumBadge } from "@/components/PremiumGate";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -84,6 +85,30 @@ export default function Dashboard() {
     return s;
   }, [transactions]);
 
+  // Premium-only: forecast, top category, daily avg, monthly trend
+  const premiumInsights = useMemo(() => {
+    if (monthData.count === 0) return null;
+    const now = new Date();
+    const dayOfMonth = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const avgDaily = monthData.expenses / Math.max(1, dayOfMonth);
+    const forecast = avgDaily * daysInMonth;
+    const sorted = Object.entries(monthData.byCat).sort((a, b) => b[1] - a[1]);
+    const top = sorted[0];
+    const topPct = top && monthData.expenses > 0 ? Math.round((top[1] / monthData.expenses) * 100) : 0;
+    // last month total
+    const lastMonthYm = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().slice(0, 7);
+    const lastMonthExp = transactions
+      .filter((t) => t.type === "expense" && t.occurred_on.startsWith(lastMonthYm))
+      .reduce((s, t) => s + Number(t.amount), 0);
+    let trend = "—";
+    if (lastMonthExp > 0) {
+      const diff = Math.round(((monthData.expenses - lastMonthExp) / lastMonthExp) * 100);
+      trend = diff >= 0 ? `+${diff}%` : `${diff}%`;
+    }
+    return { avgDaily, forecast, top, topPct, trend };
+  }, [monthData, transactions]);
+
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-6">
       <div className="flex items-end justify-between gap-4">
@@ -151,6 +176,46 @@ export default function Dashboard() {
           ))}
         </ul>
       </Card>
+
+      {/* Premium Insights */}
+      <PremiumGate
+        title={t("premiumInsights.title")}
+        preview={
+          <div className="space-y-2">
+            <div className="h-4 bg-secondary rounded w-3/4" />
+            <div className="h-4 bg-secondary rounded w-2/3" />
+            <div className="h-4 bg-secondary rounded w-1/2" />
+          </div>
+        }
+      >
+        <Card className="p-6">
+          <h2 className="font-semibold flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            {t("premiumInsights.title")}
+            <PremiumBadge />
+          </h2>
+          {!premiumInsights ? (
+            <p className="text-sm text-muted-foreground mt-3">{t("premiumInsights.noData")}</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              <li className="text-sm p-3 bg-secondary rounded-lg">
+                {t("premiumInsights.forecast", { amount: premiumInsights.forecast.toFixed(0) })}
+              </li>
+              {premiumInsights.top && (
+                <li className="text-sm p-3 bg-secondary rounded-lg">
+                  {t("premiumInsights.topCategory", { cat: premiumInsights.top[0], percent: premiumInsights.topPct })}
+                </li>
+              )}
+              <li className="text-sm p-3 bg-secondary rounded-lg">
+                {t("premiumInsights.avgDaily", { amount: premiumInsights.avgDaily.toFixed(2) })}
+              </li>
+              <li className="text-sm p-3 bg-secondary rounded-lg">
+                {t("premiumInsights.trend", { trend: premiumInsights.trend })}
+              </li>
+            </ul>
+          )}
+        </Card>
+      </PremiumGate>
 
       {/* Deadlines */}
       <Card className="p-6">
