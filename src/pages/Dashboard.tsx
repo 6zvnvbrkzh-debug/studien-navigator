@@ -5,6 +5,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import { Card } from "@/components/ui/card";
 import { TrendingDown, TrendingUp, Sparkles, Target, Flame } from "lucide-react";
+import { PremiumGate, PremiumBadge } from "@/components/PremiumGate";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
