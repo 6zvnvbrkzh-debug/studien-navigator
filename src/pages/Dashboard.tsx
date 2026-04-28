@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useProfile } from "@/hooks/useProfile";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useRoles } from "@/hooks/useRoles";
+import { useRecurring } from "@/hooks/useRecurring";
+import { AICoachCard } from "@/components/AICoachCard";
 import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import { Card } from "@/components/ui/card";
 import { TrendingDown, TrendingUp, Sparkles, Target, Flame } from "lucide-react";
@@ -23,6 +25,8 @@ export default function Dashboard() {
   const { profile, loading: profileLoading } = useProfile();
   const { transactions, loading: txLoading } = useTransactions();
   const { isPremium } = useRoles();
+  // Triggers auto-creation of due recurring transactions for the month.
+  useRecurring();
   const { user } = useAuth();
   const [deadlines, setDeadlines] = useState<Array<{ id: string; title: string; due_date: string }>>([]);
 
@@ -313,6 +317,24 @@ export default function Dashboard() {
             </ul>
           )}
         </Card>
+      </PremiumGate>
+
+      {/* AI Coach (Premium) */}
+      <PremiumGate
+        title={t("aiCoach.title")}
+        description={t("aiCoach.subtitle")}
+        preview={
+          <div className="space-y-2">
+            <div className="h-4 bg-secondary rounded w-3/4" />
+            <div className="h-4 bg-secondary rounded w-2/3" />
+            <div className="h-4 bg-secondary rounded w-4/5" />
+          </div>
+        }
+      >
+        <AICoachCard
+          summary={`Monatsbudget: € ${budget.toFixed(0)}\nEinnahmen: € ${monthData.income.toFixed(0)}\nAusgaben: € ${monthData.expenses.toFixed(0)}\nVerfügbar: € ${remaining.toFixed(0)}\nSparziel: € ${savingsGoal.toFixed(0)} (${savingsPct}% erreicht)\nAusgaben pro Kategorie: ${Object.entries(monthData.byCat).map(([k, v]) => `${k}: €${v.toFixed(0)}`).join(", ") || "keine"}\nAnzahl Transaktionen: ${monthData.count}`}
+          disabled={monthData.count === 0}
+        />
       </PremiumGate>
 
       {/* Deadlines */}
