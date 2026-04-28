@@ -6,6 +6,7 @@ export const en = {
   nav: {
     dashboard: "Dashboard",
     budget: "Budget",
+    goals: "Goals",
     bafoeg: "BAföG",
     jobs: "Jobs",
     marketplace: "Marketplace",
