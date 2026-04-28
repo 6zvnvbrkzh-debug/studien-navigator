@@ -239,6 +239,16 @@ export const de = {
     trend: "Trend vs. Vormonat: {{trend}}",
     noData: "Noch nicht genug Daten für erweiterte Analysen.",
   },
+  checkoutSuccess: {
+    title: "Premium freigeschaltet 🎉",
+    subtitle: "Vielen Dank für dein Abo! Alle Premium-Funktionen sind ab sofort verfügbar.",
+    feature1: "Erweiterte Insights & Prognosen",
+    feature2: "6-Monats-Trend & CSV-Export",
+    feature3: "Job-Match & alle Premium-Tools",
+    ctaPremium: "Premium-Funktionen entdecken",
+    ctaProfile: "Abo verwalten",
+    syncing: "Abo wird synchronisiert…",
+  },
   common: {
     loading: "Lädt...",
     error: "Fehler aufgetreten",
