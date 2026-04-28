@@ -37,7 +37,10 @@ export function useProfile() {
       i18n.changeLanguage(data.language);
     }
     setLoading(false);
-  }, [user, i18n]);
+    // i18n is a stable singleton; including it in deps would re-run on every
+    // languageChanged event and cause an infinite refetch loop on mobile.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   useEffect(() => {
     refresh();
