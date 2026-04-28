@@ -300,7 +300,7 @@ export const en = {
     premiumPlanName: "Premium",
     premiumPlanPrice: "€3.99",
     premiumPlanPeriod: "per month",
-    premiumPlanFeature1: "Everything in Free",
+    premiumPlanFeature1: "Everything in the Free Plan\n\n",
     premiumPlanFeature2: "AI job matching",
     premiumPlanFeature3: "Advanced insights & forecasts",
     premiumPlanFeature4: "6-month spending trend",

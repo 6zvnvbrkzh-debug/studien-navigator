@@ -305,7 +305,7 @@ export const de = {
     premiumPlanName: "Premium",
     premiumPlanPrice: "3,99 €",
     premiumPlanPeriod: "pro Monat",
-    premiumPlanFeature1: "Alles aus Kostenlos",
+    premiumPlanFeature1: "Alles aus dem Free Plan\n\n",
     premiumPlanFeature2: "KI Job-Matching",
     premiumPlanFeature3: "Erweiterte Insights & Prognosen",
     premiumPlanFeature4: "6 Monate Ausgaben-Trend",
