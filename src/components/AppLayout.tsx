@@ -24,17 +24,17 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const currentNav = navItems.find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)));
 
   return (
-    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
+    <div className="flex min-h-dvh w-full max-w-full flex-col overflow-hidden bg-background">
       <PaymentTestModeBanner />
-      <div className="flex w-full max-w-full min-h-screen">
+      <div className="flex min-h-0 flex-1 w-full max-w-full overflow-hidden">
       {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex w-64 flex-col border-r bg-card sticky top-0 h-screen self-start">
-        <div className="p-6 border-b">
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col overflow-hidden border-r bg-card">
+        <div className="shrink-0 border-b p-6">
           <NavLink to="/app" className="flex items-center gap-2 hover-lift">
             <img src={headerLogo} alt="Studinance" className="h-8 w-auto" />
           </NavLink>
         </div>
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -57,16 +57,16 @@ export function AppLayout({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-        <div className="p-3 border-t">
+        <div className="shrink-0 border-t p-3">
           <LanguageSwitcher />
         </div>
       </aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Mobile header */}
         <header
-          className="lg:hidden sticky top-0 z-30 bg-card/95 backdrop-blur border-b px-4 flex items-center justify-between"
+          className="sticky top-0 z-30 flex shrink-0 items-center justify-between border-b bg-card/95 px-4 backdrop-blur lg:hidden"
           style={{
             paddingTop: "env(safe-area-inset-top)",
             height: "calc(3.5rem + env(safe-area-inset-top))",
@@ -81,8 +81,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
         <main
           key={location.pathname}
-          className="flex-1 lg:pb-0 animate-fade-in overflow-x-hidden"
-          style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
+          className="flex-1 overflow-y-auto overflow-x-hidden animate-fade-in pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0"
         >
           {children}
         </main>
