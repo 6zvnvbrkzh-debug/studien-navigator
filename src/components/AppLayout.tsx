@@ -24,7 +24,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const currentNav = navItems.find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)));
 
   return (
-    <div className="flex min-h-dvh w-full max-w-full flex-col overflow-hidden bg-background">
+    <div className="flex h-dvh w-full max-w-full flex-col overflow-hidden bg-background">
       <PaymentTestModeBanner />
       <div className="flex min-h-0 flex-1 w-full max-w-full overflow-hidden">
         {/* Sidebar Desktop */}
