@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, Wallet, GraduationCap, Briefcase, ShoppingBag, User } from "lucide-react";
+import { LayoutDashboard, Wallet, Target, GraduationCap, Briefcase, ShoppingBag, User } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { PaymentTestModeBanner } from "./PaymentTestModeBanner";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ import logo from "@/assets/studinance-logo.webp";
 const navItems = [
   { to: "/app", key: "dashboard", icon: LayoutDashboard, end: true },
   { to: "/app/budget", key: "budget", icon: Wallet },
+  { to: "/app/goals", key: "goals", icon: Target },
   { to: "/app/bafoeg", key: "bafoeg", icon: GraduationCap },
   { to: "/app/jobs", key: "jobs", icon: Briefcase },
   { to: "/app/marketplace", key: "marketplace", icon: ShoppingBag },
@@ -91,7 +92,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           className="lg:hidden fixed bottom-0 inset-x-0 bg-card border-t z-30"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
-          <div className="grid grid-cols-6 h-16">
+          <div className="grid grid-cols-7 h-16">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
