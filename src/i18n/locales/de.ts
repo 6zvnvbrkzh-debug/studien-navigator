@@ -185,6 +185,20 @@ export const de = {
     noData: "Erfasse Transaktionen, um Insights zu erhalten.",
     savingsProgress: "Du hast {{percent}}% deines Sparziels erreicht.",
   },
+  premiumGate: {
+    title: "Premium-Funktion",
+    description: "Schalte erweiterte Insights, Prognosen und mehr frei – ab 3,99 €/Monat.",
+    cta: "Jetzt upgraden",
+    badge: "Premium",
+  },
+  premiumInsights: {
+    title: "Erweiterte Insights",
+    forecast: "Voraussichtliche Ausgaben Monatsende: € {{amount}}",
+    topCategory: "Größte Kategorie: {{cat}} ({{percent}}%)",
+    avgDaily: "Durchschnitt pro Tag: € {{amount}}",
+    trend: "Trend vs. Vormonat: {{trend}}",
+    noData: "Noch nicht genug Daten für erweiterte Analysen.",
+  },
   common: {
     loading: "Lädt...",
     error: "Fehler aufgetreten",
