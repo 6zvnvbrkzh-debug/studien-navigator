@@ -10,7 +10,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Sparkles, CheckCircle2 } from "lucide-react";
+import { LogOut, Sparkles, CheckCircle2, XCircle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 
@@ -28,6 +39,7 @@ export default function Profile() {
   const [budget, setBudget] = useState<string>("");
   const [savings, setSavings] = useState<string>("");
   const [busy, setBusy] = useState(false);
+  const [cancelEndsAt, setCancelEndsAt] = useState<Date | null>(null);
 
   useEffect(() => {
     if (profile) {
@@ -86,6 +98,28 @@ export default function Profile() {
     window.open(data.url, "_blank");
   };
 
+  const cancel = async () => {
+    setBusy(true);
+    const { data, error } = await supabase.functions.invoke("cancel-subscription");
+    setBusy(false);
+    if (error || !data) {
+      toast.error(error?.message || t("common.error"));
+      return;
+    }
+    if (data.error) {
+      toast.error(data.error);
+      return;
+    }
+    const endsAt = data.cancel_at ? new Date(data.cancel_at * 1000) : null;
+    if (endsAt) setCancelEndsAt(endsAt);
+    const dateStr = endsAt ? endsAt.toLocaleDateString() : "";
+    if (data.alreadyCanceled) {
+      toast.info(t("profile.cancelAlready", { date: dateStr }));
+    } else {
+      toast.success(t("profile.cancelSuccess", { date: dateStr }));
+    }
+  };
+
   return (
     <div className="p-4 sm:p-8 max-w-3xl mx-auto space-y-6">
       <h1 className="text-2xl sm:text-3xl font-bold">{t("profile.title")}</h1>
@@ -111,7 +145,46 @@ export default function Profile() {
           <div className="text-right shrink-0">
             {!isPremium && <div className="text-sm opacity-90 mb-2">{t("profile.pricePerMonth")}</div>}
             {isPremium ? (
-              <Button variant="outline" size="sm" onClick={portal} disabled={busy}>{t("profile.manageSub")}</Button>
+              <div className="flex flex-col gap-2 items-end">
+                <Button variant="outline" size="sm" onClick={portal} disabled={busy}>
+                  {t("profile.manageSub")}
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={busy}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      {t("profile.cancelSub")}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{t("profile.cancelConfirmTitle")}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t("profile.cancelConfirmDesc")}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{t("profile.cancelKeep")}</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={cancel}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        {t("profile.cancelConfirm")}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                {cancelEndsAt && (
+                  <p className="text-xs text-muted-foreground">
+                    {t("profile.cancelEndsOn", { date: cancelEndsAt.toLocaleDateString() })}
+                  </p>
+                )}
+              </div>
             ) : (
               <Button variant="secondary" size="sm" onClick={upgrade} disabled={busy}>{t("profile.upgradeToPro")}</Button>
             )}
