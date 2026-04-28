@@ -185,6 +185,20 @@ export const en = {
     noData: "Add transactions to get insights.",
     savingsProgress: "You've reached {{percent}}% of your savings goal.",
   },
+  premiumGate: {
+    title: "Premium feature",
+    description: "Unlock advanced insights, forecasts, and more – from €3.99/month.",
+    cta: "Upgrade now",
+    badge: "Premium",
+  },
+  premiumInsights: {
+    title: "Advanced Insights",
+    forecast: "Projected month-end spending: € {{amount}}",
+    topCategory: "Top category: {{cat}} ({{percent}}%)",
+    avgDaily: "Daily average: € {{amount}}",
+    trend: "Trend vs. last month: {{trend}}",
+    noData: "Not enough data yet for advanced analytics.",
+  },
   common: {
     loading: "Loading...",
     error: "Something went wrong",
