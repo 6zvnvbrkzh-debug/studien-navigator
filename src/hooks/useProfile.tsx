@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useTranslation } from "react-i18next";
+import { useRoles } from "./useRoles";
 
 export interface Profile {
   id: string;
@@ -20,6 +21,7 @@ export interface Profile {
 export function useProfile() {
   const { user } = useAuth();
   const { i18n } = useTranslation();
+  const { isPremium: isPremiumRole } = useRoles();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +43,11 @@ export function useProfile() {
     refresh();
   }, [refresh]);
 
-  const isPremium = !!(profile?.premium_until && new Date(profile.premium_until) > new Date());
+  // Premium status comes from user_roles (kept in sync with Stripe by trigger).
+  // Fallback to profile.premium_until for legacy data.
+  const isPremium =
+    isPremiumRole ||
+    !!(profile?.premium_until && new Date(profile.premium_until) > new Date());
 
   return { profile, loading, refresh, isPremium };
 }
