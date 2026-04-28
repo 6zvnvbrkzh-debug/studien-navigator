@@ -25,9 +25,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
       <PaymentTestModeBanner />
-      <div className="flex w-full max-w-full">
+      <div className="flex w-full max-w-full min-h-screen">
       {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex w-64 flex-col border-r bg-card sticky top-0 h-screen">
+      <aside className="hidden lg:flex w-64 flex-col border-r bg-card sticky top-0 h-screen self-start">
         <div className="p-6 border-b">
           <NavLink to="/app" className="flex items-center gap-2 hover-lift">
             <img src={headerLogo} alt="Studinance" className="h-8 w-auto" />
