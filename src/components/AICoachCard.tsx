@@ -31,7 +31,8 @@ export function AICoachCard({ summary, disabled }: Props) {
         body: JSON.stringify({ summary }),
       });
       if (resp.status === 429) {
-        toast.error(t("aiCoach.rateLimit"));
+        const body = await resp.json().catch(() => null);
+        toast.error(body?.error || t("aiCoach.rateLimit"));
         setLoading(false);
         return;
       }
