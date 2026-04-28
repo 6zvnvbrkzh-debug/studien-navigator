@@ -177,6 +177,46 @@ export default function Dashboard() {
         </ul>
       </Card>
 
+      {/* Premium Insights */}
+      <PremiumGate
+        title={t("premiumInsights.title")}
+        preview={
+          <div className="space-y-2">
+            <div className="h-4 bg-secondary rounded w-3/4" />
+            <div className="h-4 bg-secondary rounded w-2/3" />
+            <div className="h-4 bg-secondary rounded w-1/2" />
+          </div>
+        }
+      >
+        <Card className="p-6">
+          <h2 className="font-semibold flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            {t("premiumInsights.title")}
+            <PremiumBadge />
+          </h2>
+          {!premiumInsights ? (
+            <p className="text-sm text-muted-foreground mt-3">{t("premiumInsights.noData")}</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              <li className="text-sm p-3 bg-secondary rounded-lg">
+                {t("premiumInsights.forecast", { amount: premiumInsights.forecast.toFixed(0) })}
+              </li>
+              {premiumInsights.top && (
+                <li className="text-sm p-3 bg-secondary rounded-lg">
+                  {t("premiumInsights.topCategory", { cat: premiumInsights.top[0], percent: premiumInsights.topPct })}
+                </li>
+              )}
+              <li className="text-sm p-3 bg-secondary rounded-lg">
+                {t("premiumInsights.avgDaily", { amount: premiumInsights.avgDaily.toFixed(2) })}
+              </li>
+              <li className="text-sm p-3 bg-secondary rounded-lg">
+                {t("premiumInsights.trend", { trend: premiumInsights.trend })}
+              </li>
+            </ul>
+          )}
+        </Card>
+      </PremiumGate>
+
       {/* Deadlines */}
       <Card className="p-6">
         <h2 className="font-semibold">{t("dashboard.upcomingDeadlines")}</h2>
