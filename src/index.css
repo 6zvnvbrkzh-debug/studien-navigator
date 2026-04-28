@@ -136,4 +136,10 @@ All colors MUST be HSL.
   .card-smooth {
     @apply transition-all duration-300 ease-out hover:shadow-[var(--shadow-elevated)] hover:-translate-y-0.5;
   }
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
+  .bg-gradient-accent {
+    background: var(--gradient-accent);
+  }
 }

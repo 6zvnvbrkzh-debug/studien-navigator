@@ -35,7 +35,7 @@ export default function Marketplace() {
       </div>
 
       {/* Email capture */}
-      <Card className="p-6 bg-[var(--gradient-primary)] text-primary-foreground border-0">
+      <Card className="p-6 bg-gradient-primary text-primary-foreground border-0">
         {submitted ? (
           <div className="text-center py-2">
             <div className="text-2xl mb-2">🎉</div>

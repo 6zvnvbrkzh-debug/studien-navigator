@@ -147,7 +147,7 @@ export default function Landing() {
             </div>
 
             {/* Premium */}
-            <div className="rounded-2xl bg-[var(--gradient-primary)] text-primary-foreground p-6 flex flex-col gap-4 shadow-[var(--shadow-elevated)]">
+            <div className="rounded-2xl bg-gradient-primary text-primary-foreground p-6 flex flex-col gap-4 shadow-[var(--shadow-elevated)]">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium opacity-90">{t("landing.premiumPlanName")}</span>

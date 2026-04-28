@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
-  children: ReactNode;
+  children?: ReactNode;
   /** If true, shows a blurred preview behind the lock instead of nothing */
   preview?: ReactNode;
   title?: string;
@@ -47,7 +47,7 @@ export function PremiumGate({ children, preview, title, description }: Props) {
             {description ?? t("premiumGate.description")}
           </p>
         </div>
-        <Button onClick={() => navigate("/profile")} size="sm">
+        <Button onClick={() => navigate("/app/profile")} size="sm">
           {t("premiumGate.cta")}
         </Button>
       </div>

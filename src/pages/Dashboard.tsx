@@ -159,16 +159,19 @@ export default function Dashboard() {
       </div>
 
       {/* Budget summary */}
-      <Card className="p-6 bg-[var(--gradient-primary)] text-primary-foreground border-0">
-        <div className="text-sm opacity-90">{t("dashboard.remaining")}</div>
+      <Card
+        className="p-6 text-primary-foreground border-0"
+        style={{ background: "var(--gradient-primary)" }}
+      >
+        <div className="text-sm text-primary-foreground/90">{t("dashboard.remaining")}</div>
         <div className="text-4xl font-bold mt-1 tabular-nums">€ {remaining.toFixed(2)}</div>
-        <div className="mt-4 h-2 bg-white/20 rounded-full overflow-hidden">
+        <div className="mt-4 h-2 bg-primary-foreground/20 rounded-full overflow-hidden">
           <div
-            className="h-full bg-white transition-all duration-500"
+            className="h-full bg-primary-foreground transition-all duration-500"
             style={{ width: `${budget > 0 ? Math.min(100, (monthData.expenses / budget) * 100) : 0}%` }}
           />
         </div>
-        <div className="mt-2 flex justify-between text-xs opacity-90">
+        <div className="mt-2 flex justify-between text-xs text-primary-foreground/90">
           <span>{t("dashboard.spent")}: € {monthData.expenses.toFixed(2)}</span>
           <span>{t("dashboard.monthlyBudget")}: € {budget.toFixed(2)}</span>
         </div>
