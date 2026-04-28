@@ -22,7 +22,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const currentNav = navItems.find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)));
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex w-full max-w-full overflow-x-hidden">
       {/* Sidebar Desktop */}
       <aside className="hidden lg:flex w-64 flex-col border-r bg-card sticky top-0 h-screen">
         <div className="p-6 border-b">
@@ -61,7 +61,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
-        <header className="lg:hidden sticky top-0 z-30 bg-card/80 backdrop-blur border-b px-4 h-14 flex items-center justify-between">
+        <header
+          className="lg:hidden sticky top-0 z-30 bg-card/95 backdrop-blur border-b px-4 flex items-center justify-between"
+          style={{
+            paddingTop: "env(safe-area-inset-top)",
+            height: "calc(3.5rem + env(safe-area-inset-top))",
+          }}
+        >
           <div className="flex items-center gap-2">
             <img src={logo} alt="Studinance" className="h-7 w-7 rounded-md" />
             <span className="font-semibold">{currentNav ? t(`nav.${currentNav.key}`) : t("app.name")}</span>
@@ -69,10 +75,19 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <LanguageSwitcher />
         </header>
 
-        <main key={location.pathname} className="flex-1 pb-20 lg:pb-0 animate-fade-in">{children}</main>
+        <main
+          key={location.pathname}
+          className="flex-1 lg:pb-0 animate-fade-in overflow-x-hidden"
+          style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
+        >
+          {children}
+        </main>
 
         {/* Bottom nav mobile */}
-        <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-card border-t z-30">
+        <nav
+          className="lg:hidden fixed bottom-0 inset-x-0 bg-card border-t z-30"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
           <div className="grid grid-cols-6 h-16">
             {navItems.map((item) => {
               const Icon = item.icon;
