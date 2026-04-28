@@ -186,7 +186,7 @@ export default function Jobs() {
       <h1 className="text-2xl sm:text-3xl font-bold">{t("jobs.title")}</h1>
 
       {!isPremium && (
-        <Card className="p-6 bg-[var(--gradient-primary)] text-primary-foreground border-0">
+        <Card className="p-6 bg-gradient-primary text-primary-foreground border-0">
           <div className="flex items-start gap-3">
             <Sparkles className="w-5 h-5 shrink-0 mt-0.5" />
             <div>

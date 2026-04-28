@@ -91,7 +91,7 @@ export default function Profile() {
       <h1 className="text-2xl sm:text-3xl font-bold">{t("profile.title")}</h1>
 
       {/* Premium card */}
-      <Card className={`p-6 ${isPremium ? "" : "bg-[var(--gradient-primary)] text-primary-foreground border-0"}`}>
+      <Card className={`p-6 ${isPremium ? "" : "bg-gradient-primary text-primary-foreground border-0"}`}>
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
