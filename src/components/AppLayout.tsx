@@ -23,8 +23,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const currentNav = navItems.find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)));
 
   return (
-    <div className="min-h-screen bg-background flex w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
       <PaymentTestModeBanner />
+      <div className="flex w-full max-w-full">
       {/* Sidebar Desktop */}
       <aside className="hidden lg:flex w-64 flex-col border-r bg-card sticky top-0 h-screen">
         <div className="p-6 border-b">
