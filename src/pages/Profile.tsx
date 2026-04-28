@@ -22,8 +22,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
+import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
+import { getStripeEnvironment } from "@/lib/stripe";
 
 export default function Profile() {
   const { t, i18n } = useTranslation();
@@ -41,22 +44,46 @@ export default function Profile() {
   const [busy, setBusy] = useState(false);
   const [cancelEndsAt, setCancelEndsAt] = useState<Date | null>(null);
   const [canceled, setCanceled] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
-  // Load persistent cancel state from subscribers so it survives reloads
+  // Load subscription state from new subscriptions table
   useEffect(() => {
     if (!user) return;
     supabase
-      .from("subscribers")
-      .select("cancel_at_period_end, subscription_end")
+      .from("subscriptions")
+      .select("cancel_at_period_end, current_period_end, status")
       .eq("user_id", user.id)
+      .eq("environment", getStripeEnvironment())
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.cancel_at_period_end && data.subscription_end) {
+        if (data?.cancel_at_period_end && data.current_period_end) {
           setCanceled(true);
-          setCancelEndsAt(new Date(data.subscription_end));
+          setCancelEndsAt(new Date(data.current_period_end as string));
+        } else {
+          setCanceled(false);
+          setCancelEndsAt(null);
         }
       });
-  }, [user]);
+  }, [user, isPremium]);
+
+  // Realtime updates on subscription changes
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("subscriptions-" + user.id)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${user.id}` },
+        () => {
+          refreshRoles();
+          refresh();
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, refresh, refreshRoles]);
 
   const endsAt = cancelEndsAt;
 
@@ -71,18 +98,16 @@ export default function Profile() {
     }
   }, [profile]);
 
-  // Handle returning from Stripe
+  // Handle return from Stripe checkout
   useEffect(() => {
     if (params.get("checkout") === "success") {
       toast.success(t("profile.premiumActive"));
       setParams({});
-      // Re-check subscription
-      supabase.functions.invoke("check-subscription").then(() => {
-        refresh();
-        refreshRoles();
-      });
+      setCheckoutOpen(false);
+      // Webhook should already have created the row; refresh to pick it up
+      setTimeout(() => { refresh(); refreshRoles(); }, 1500);
     }
-  }, [params]);
+  }, [params, t, setParams, refresh, refreshRoles]);
 
   const save = async () => {
     if (!user) return;
@@ -101,25 +126,16 @@ export default function Profile() {
     else { toast.success(t("profile.saved")); refresh(); }
   };
 
-  const upgrade = async () => {
-    setBusy(true);
-    const { data, error } = await supabase.functions.invoke("create-checkout");
-    setBusy(false);
-    if (error || !data?.url) { toast.error(error?.message || t("common.error")); return; }
-    window.open(data.url, "_blank");
-  };
-
-  const portal = async () => {
-    setBusy(true);
-    const { data, error } = await supabase.functions.invoke("customer-portal");
-    setBusy(false);
-    if (error || !data?.url) { toast.error(error?.message || t("common.error")); return; }
-    window.open(data.url, "_blank");
+  const upgrade = () => {
+    if (busy || checkoutOpen) return;
+    setCheckoutOpen(true);
   };
 
   const cancel = async () => {
     setBusy(true);
-    const { data, error } = await supabase.functions.invoke("cancel-subscription");
+    const { data, error } = await supabase.functions.invoke("cancel-subscription", {
+      body: { environment: getStripeEnvironment() },
+    });
     if (error || !data) {
       setBusy(false);
       toast.error(error?.message || t("common.error"));
@@ -133,8 +149,6 @@ export default function Profile() {
     const newEndsAt = data.cancel_at ? new Date(data.cancel_at * 1000) : null;
     if (newEndsAt) setCancelEndsAt(newEndsAt);
     setCanceled(true);
-    // Persist the end date to the DB so it survives a reload
-    await supabase.functions.invoke("check-subscription");
     await refresh();
     setBusy(false);
     const dateStr = newEndsAt ? newEndsAt.toLocaleDateString() : "";
@@ -177,9 +191,6 @@ export default function Profile() {
                     {t("profile.cancelEndsOn", { date: endsAt.toLocaleDateString() })}
                   </div>
                 )}
-                <Button variant="outline" size="sm" onClick={portal} disabled={busy}>
-                  {t("profile.manageSub")}
-                </Button>
                 {!canceled && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -226,11 +237,28 @@ export default function Profile() {
                 )}
               </div>
             ) : (
-              <Button variant="secondary" size="sm" onClick={upgrade} disabled={busy}>{t("profile.upgradeToPro")}</Button>
+              <Button variant="secondary" size="sm" onClick={upgrade} disabled={busy || checkoutOpen}>
+                {t("profile.upgradeToPro")}
+              </Button>
             )}
           </div>
         </div>
       </Card>
+
+      {/* Embedded Stripe checkout dialog */}
+      <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("profile.upgradeToPro")}</DialogTitle>
+          </DialogHeader>
+          {checkoutOpen && (
+            <StripeEmbeddedCheckout
+              priceId="premium_monthly"
+              returnUrl={`${window.location.origin}/app/profile?checkout=success`}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Profile form */}
       <Card className="p-6 space-y-4">
