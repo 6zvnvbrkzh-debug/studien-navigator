@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import headerLogo from "@/assets/studinance-header.webp";
+import logo from "@/assets/studinance-logo.webp";
 
 export default function Auth() {
   const { t } = useTranslation();
@@ -56,15 +58,15 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="px-4 sm:px-8 h-16 flex items-center justify-between border-b">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold">S</div>
-          <span className="font-bold text-lg">{t("app.name")}</span>
+        <Link to="/" className="flex items-center gap-2 hover-lift">
+          <img src={headerLogo} alt="Studinance" className="h-8 sm:h-9 w-auto" />
         </Link>
         <LanguageSwitcher />
       </header>
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-card border rounded-2xl p-6 sm:p-8 shadow-[var(--shadow-card)]">
-          <h1 className="text-2xl font-bold">{mode === "signin" ? t("auth.welcome") : t("auth.signupTitle")}</h1>
+        <div className="w-full max-w-sm bg-card border rounded-2xl p-6 sm:p-8 shadow-[var(--shadow-card)] animate-scale-in">
+          <img src={logo} alt="" aria-hidden="true" className="mx-auto w-14 h-14 mb-4 drop-shadow-lg" />
+          <h1 className="text-2xl font-bold text-center">{mode === "signin" ? t("auth.welcome") : t("auth.signupTitle")}</h1>
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">{t("auth.email")}</Label>

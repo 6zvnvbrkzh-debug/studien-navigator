@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { LayoutDashboard, Wallet, GraduationCap, Briefcase, ShoppingBag, User } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { cn } from "@/lib/utils";
+import headerLogo from "@/assets/studinance-header.webp";
+import logo from "@/assets/studinance-logo.webp";
 
 const navItems = [
   { to: "/app", key: "dashboard", icon: LayoutDashboard, end: true },
@@ -24,10 +26,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
       {/* Sidebar Desktop */}
       <aside className="hidden lg:flex w-64 flex-col border-r bg-card sticky top-0 h-screen">
         <div className="p-6 border-b">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold">S</div>
-            <span className="font-bold text-lg">{t("app.name")}</span>
-          </div>
+          <NavLink to="/app" className="flex items-center gap-2 hover-lift">
+            <img src={headerLogo} alt="Studinance" className="h-8 w-auto" />
+          </NavLink>
         </div>
         <nav className="flex-1 p-3 space-y-1">
           {navItems.map((item) => {
@@ -39,8 +40,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 end={item.end}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                    isActive ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-secondary"
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ease-out",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-[var(--shadow-card)]"
+                      : "text-foreground hover:bg-secondary hover:translate-x-0.5"
                   )
                 }
               >
@@ -60,13 +63,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
         {/* Mobile header */}
         <header className="lg:hidden sticky top-0 z-30 bg-card/80 backdrop-blur border-b px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">S</div>
+            <img src={logo} alt="Studinance" className="h-7 w-7 rounded-md" />
             <span className="font-semibold">{currentNav ? t(`nav.${currentNav.key}`) : t("app.name")}</span>
           </div>
           <LanguageSwitcher />
         </header>
 
-        <main className="flex-1 pb-20 lg:pb-0">{children}</main>
+        <main className="flex-1 pb-20 lg:pb-0 animate-fade-in">{children}</main>
 
         {/* Bottom nav mobile */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-card border-t z-30">
@@ -80,8 +83,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
                   end={item.end}
                   className={({ isActive }) =>
                     cn(
-                      "flex flex-col items-center justify-center gap-1 text-[10px]",
-                      isActive ? "text-primary" : "text-muted-foreground"
+                      "flex flex-col items-center justify-center gap-1 text-[10px] transition-all duration-200 ease-out",
+                      isActive ? "text-primary scale-105" : "text-muted-foreground hover:text-foreground"
                     )
                   }
                 >

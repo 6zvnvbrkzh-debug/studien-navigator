@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Wallet, GraduationCap, Briefcase, ArrowRight } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useAuth } from "@/hooks/useAuth";
+import headerLogo from "@/assets/studinance-header.webp";
+import logo from "@/assets/studinance-logo.webp";
 
 export default function Landing() {
   const { t } = useTranslation();
@@ -14,10 +16,9 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <header className="px-4 sm:px-8 h-16 flex items-center justify-between border-b">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold">S</div>
-          <span className="font-bold text-lg">{t("app.name")}</span>
-        </div>
+        <Link to="/" className="flex items-center gap-2 hover-lift">
+          <img src={headerLogo} alt="Studinance" className="h-8 sm:h-9 w-auto" />
+        </Link>
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
           <Button asChild variant="ghost" size="sm"><Link to="/auth">{t("landing.login")}</Link></Button>
@@ -25,13 +26,14 @@ export default function Landing() {
       </header>
 
       <main className="px-4 sm:px-8">
-        <section className="max-w-3xl mx-auto text-center py-16 sm:py-24">
+        <section className="max-w-3xl mx-auto text-center py-16 sm:py-24 animate-fade-in">
+          <img src={logo} alt="" aria-hidden="true" className="mx-auto w-20 h-20 sm:w-24 sm:h-24 mb-8 animate-float drop-shadow-xl" />
           <h1 className="text-4xl sm:text-6xl font-bold tracking-tight leading-tight">
             {t("landing.hero")}
           </h1>
           <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto">{t("landing.sub")}</p>
           <div className="mt-8 flex justify-center gap-3">
-            <Button asChild size="lg" className="shadow-[var(--shadow-elevated)]">
+            <Button asChild size="lg" className="shadow-[var(--shadow-elevated)] hover-lift">
               <Link to="/auth?mode=signup">
                 {t("landing.cta")} <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
@@ -47,7 +49,11 @@ export default function Landing() {
           ].map((f, i) => {
             const Icon = f.icon;
             return (
-              <div key={i} className="p-6 bg-card border rounded-2xl">
+              <div
+                key={i}
+                className="p-6 bg-card border rounded-2xl card-smooth animate-fade-in"
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
                 <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
                   <Icon className="w-5 h-5" />
                 </div>
