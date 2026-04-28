@@ -26,15 +26,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-dvh w-full max-w-full flex-col overflow-hidden bg-background">
       <PaymentTestModeBanner />
-      <div className="flex min-h-0 flex-1 w-full max-w-full overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 w-full max-w-full overflow-hidden">
         {/* Sidebar Desktop */}
-        <aside className="hidden lg:flex w-64 shrink-0 flex-col overflow-hidden border-r bg-card">
+        <aside className="hidden lg:flex w-64 min-h-0 shrink-0 flex-col overflow-hidden border-r bg-card">
         <div className="shrink-0 border-b p-6">
           <NavLink to="/app" className="flex items-center gap-2 hover-lift">
             <img src={headerLogo} alt="Studinance" className="h-8 w-auto" />
           </NavLink>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -63,7 +63,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </aside>
 
         {/* Main */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         {/* Mobile header */}
         <header
           className="sticky top-0 z-30 flex shrink-0 items-center justify-between border-b bg-card/95 px-4 backdrop-blur lg:hidden"
@@ -81,7 +81,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
         <main
           key={location.pathname}
-          className="flex-1 overflow-y-auto overflow-x-hidden animate-fade-in pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0"
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden animate-fade-in pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0"
         >
           {children}
         </main>
