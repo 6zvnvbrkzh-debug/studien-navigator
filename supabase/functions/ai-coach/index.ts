@@ -1,14 +1,72 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const HOURLY_LIMIT = 5;
+const DAILY_LIMIT = 20;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // Auth required
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+    if (userErr || !userData.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = userData.user.id;
+
+    // Rate limit check
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    const { count: hourCount } = await supabaseAdmin
+      .from("ai_usage")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", oneHourAgo);
+    if ((hourCount ?? 0) >= HOURLY_LIMIT) {
+      return new Response(
+        JSON.stringify({
+          error: `Rate Limit erreicht: max. ${HOURLY_LIMIT} KI-Anfragen pro Stunde. Bitte später erneut versuchen.`,
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { count: dayCount } = await supabaseAdmin
+      .from("ai_usage")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("created_at", oneDayAgo);
+    if ((dayCount ?? 0) >= DAILY_LIMIT) {
+      return new Response(
+        JSON.stringify({
+          error: `Tageslimit erreicht: max. ${DAILY_LIMIT} KI-Anfragen pro Tag. Versuche es morgen erneut.`,
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { summary } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -56,6 +114,9 @@ Sei motivierend, aber ehrlich. Verwende €-Beträge wenn sinnvoll.`;
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Count this successful request against the limit
+    await supabaseAdmin.from("ai_usage").insert({ user_id: userId });
 
     return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
