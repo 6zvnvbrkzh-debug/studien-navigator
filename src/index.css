@@ -114,5 +114,26 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Smooth, consistent transitions for interactive elements */
+  a, button, [role="button"], input, select, textarea {
+    @apply transition-all duration-200 ease-out;
+  }
+}
+
+@layer utilities {
+  .hover-lift {
+    @apply transition-transform duration-300 ease-out hover:-translate-y-0.5;
+  }
+  .card-smooth {
+    @apply transition-all duration-300 ease-out hover:shadow-[var(--shadow-elevated)] hover:-translate-y-0.5;
   }
 }
