@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.sync_premium_role_from_subscriptions() FROM PUBLIC, anon, authenticated;

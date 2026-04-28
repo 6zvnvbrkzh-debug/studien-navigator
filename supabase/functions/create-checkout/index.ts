@@ -1,5 +1,5 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,50 +10,55 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const { priceId, returnUrl, environment } = await req.json();
+    if (!priceId || !returnUrl || !environment) throw new Error("Missing required fields");
+    if (environment !== "sandbox" && environment !== "live") throw new Error("Invalid environment");
+    if (!/^[a-zA-Z0-9_-]+$/.test(priceId)) throw new Error("Invalid priceId");
+
+    // Optional: link to authed user
+    let userId: string | undefined;
+    let customerEmail: string | undefined;
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Missing authorization");
+    if (authHeader) {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!,
+      );
+      const token = authHeader.replace("Bearer ", "");
+      const { data } = await supabase.auth.getUser(token);
+      if (data.user) {
+        userId = data.user.id;
+        customerEmail = data.user.email;
+      }
+    }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!,
-    );
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userErr } = await supabase.auth.getUser(token);
-    if (userErr || !userData.user?.email) throw new Error("Unauthorized");
-    const user = userData.user;
+    const env = environment as StripeEnv;
+    const stripe = createStripeClient(env);
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY not set");
-    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
+    const prices = await stripe.prices.list({ lookup_keys: [priceId] });
+    if (!prices.data.length) throw new Error("Price not found");
+    const stripePrice = prices.data[0];
+    const isRecurring = stripePrice.type === "recurring";
 
-    // find or create customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    const customerId = customers.data[0]?.id;
-
-    const origin = req.headers.get("origin") || "http://localhost:5173";
     const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      mode: "subscription",
-      line_items: [{
-        price_data: {
-          currency: "eur",
-          product_data: { name: "StudBudget Premium" },
-          unit_amount: 399,
-          recurring: { interval: "month" },
-        },
-        quantity: 1,
-      }],
-      success_url: `${origin}/app/profile?checkout=success`,
-      cancel_url: `${origin}/app/profile?checkout=cancel`,
+      line_items: [{ price: stripePrice.id, quantity: 1 }],
+      mode: isRecurring ? "subscription" : "payment",
+      ui_mode: "embedded_page",
+      return_url: returnUrl,
+      ...(customerEmail && { customer_email: customerEmail }),
+      ...(userId && {
+        metadata: { userId },
+        ...(isRecurring && { subscription_data: { metadata: { userId } } }),
+      }),
     });
 
-    return new Response(JSON.stringify({ url: session.url }), {
+    return new Response(JSON.stringify({ clientSecret: session.client_secret }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
+    console.error("create-checkout error:", msg);
     return new Response(JSON.stringify({ error: msg }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
