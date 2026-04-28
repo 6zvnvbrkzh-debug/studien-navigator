@@ -114,6 +114,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </nav>
       </div>
+      </div>
     </div>
   );
 }
