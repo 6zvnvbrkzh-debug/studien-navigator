@@ -1,5 +1,5 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,78 +13,68 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Missing authorization");
 
+    const { environment } = await req.json().catch(() => ({ environment: "sandbox" }));
+    if (environment !== "sandbox" && environment !== "live") throw new Error("Invalid environment");
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!,
     );
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userErr } = await supabase.auth.getUser(token);
-    if (userErr || !userData.user?.email) throw new Error("Unauthorized");
+    if (userErr || !userData.user) throw new Error("Unauthorized");
     const user = userData.user;
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY not set");
-    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
-
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    if (customers.data.length === 0) throw new Error("No Stripe customer found");
-    const customerId = customers.data[0].id;
-
-    // Find an active or trialing subscription
-    let subs = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
-    });
-    if (subs.data.length === 0) {
-      subs = await stripe.subscriptions.list({
-        customer: customerId,
-        status: "trialing",
-        limit: 1,
-      });
-    }
-    if (subs.data.length === 0) throw new Error("No active subscription");
-
-    const sub = subs.data[0];
-    if (sub.cancel_at_period_end) {
-      return new Response(
-        JSON.stringify({
-          alreadyCanceled: true,
-          cancel_at: sub.current_period_end,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
-      );
-    }
-
-    const updated = await stripe.subscriptions.update(sub.id, {
-      cancel_at_period_end: true,
-    });
-
-    // Persist the cancel-at-period-end flag and end date so the UI can show it after reload
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
-    const endIso = new Date(updated.current_period_end * 1000).toISOString();
-    await adminClient.from("subscribers").upsert({
-      user_id: user.id,
-      email: user.email,
-      stripe_customer_id: customerId,
-      subscribed: true,
-      subscription_end: endIso,
+
+    const { data: sub } = await adminClient
+      .from("subscriptions")
+      .select("stripe_subscription_id, cancel_at_period_end, current_period_end")
+      .eq("user_id", user.id)
+      .eq("environment", environment)
+      .in("status", ["active", "trialing"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!sub?.stripe_subscription_id) throw new Error("No active subscription");
+
+    if (sub.cancel_at_period_end) {
+      const cancelAt = sub.current_period_end ? Math.floor(new Date(sub.current_period_end as string).getTime() / 1000) : null;
+      return new Response(
+        JSON.stringify({ alreadyCanceled: true, cancel_at: cancelAt }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
+      );
+    }
+
+    const stripe = createStripeClient(environment as StripeEnv);
+    const updated = await stripe.subscriptions.update(sub.stripe_subscription_id, {
       cancel_at_period_end: true,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "user_id" });
-    await adminClient.from("profiles").update({
-      premium_until: endIso,
-    }).eq("user_id", user.id);
+    });
+
+    const item = updated.items?.data?.[0];
+    const periodEnd = item?.current_period_end ?? (updated as any).current_period_end;
+    const endIso = periodEnd ? new Date(periodEnd * 1000).toISOString() : null;
+
+    await adminClient
+      .from("subscriptions")
+      .update({
+        cancel_at_period_end: true,
+        current_period_end: endIso,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("stripe_subscription_id", sub.stripe_subscription_id);
 
     return new Response(
-      JSON.stringify({ canceled: true, cancel_at: updated.current_period_end }),
+      JSON.stringify({ canceled: true, cancel_at: periodEnd }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
+    console.error("cancel-subscription error:", msg);
     return new Response(JSON.stringify({ error: msg }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
