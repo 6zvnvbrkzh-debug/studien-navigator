@@ -27,8 +27,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh w-full max-w-full flex-col overflow-hidden bg-background">
       <PaymentTestModeBanner />
       <div className="flex min-h-0 flex-1 w-full max-w-full overflow-hidden">
-      {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col overflow-hidden border-r bg-card">
+        {/* Sidebar Desktop */}
+        <aside className="hidden lg:flex w-64 shrink-0 flex-col overflow-hidden border-r bg-card">
         <div className="shrink-0 border-b p-6">
           <NavLink to="/app" className="flex items-center gap-2 hover-lift">
             <img src={headerLogo} alt="Studinance" className="h-8 w-auto" />
@@ -60,10 +60,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
         <div className="shrink-0 border-t p-3">
           <LanguageSwitcher />
         </div>
-      </aside>
+        </aside>
 
-      {/* Main */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Main */}
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Mobile header */}
         <header
           className="sticky top-0 z-30 flex shrink-0 items-center justify-between border-b bg-card/95 px-4 backdrop-blur lg:hidden"
@@ -113,7 +113,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             })}
           </div>
         </nav>
-      </div>
+        </div>
       </div>
     </div>
   );
