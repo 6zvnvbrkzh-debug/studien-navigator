@@ -183,6 +183,7 @@ export type Database = {
       }
       subscribers: {
         Row: {
+          cancel_at_period_end: boolean
           email: string
           id: string
           stripe_customer_id: string | null
@@ -192,6 +193,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cancel_at_period_end?: boolean
           email: string
           id?: string
           stripe_customer_id?: string | null
@@ -201,6 +203,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cancel_at_period_end?: boolean
           email?: string
           id?: string
           stripe_customer_id?: string | null

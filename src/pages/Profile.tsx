@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Sparkles, CheckCircle2, XCircle } from "lucide-react";
+import { LogOut, Sparkles, CheckCircle2, XCircle, AlertTriangle, CalendarClock } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +40,25 @@ export default function Profile() {
   const [savings, setSavings] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [cancelEndsAt, setCancelEndsAt] = useState<Date | null>(null);
+  const [canceled, setCanceled] = useState(false);
+
+  // Load persistent cancel state from subscribers so it survives reloads
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("subscribers")
+      .select("cancel_at_period_end, subscription_end")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.cancel_at_period_end && data.subscription_end) {
+          setCanceled(true);
+          setCancelEndsAt(new Date(data.subscription_end));
+        }
+      });
+  }, [user]);
+
+  const endsAt = cancelEndsAt;
 
   useEffect(() => {
     if (profile) {
@@ -101,18 +120,24 @@ export default function Profile() {
   const cancel = async () => {
     setBusy(true);
     const { data, error } = await supabase.functions.invoke("cancel-subscription");
-    setBusy(false);
     if (error || !data) {
+      setBusy(false);
       toast.error(error?.message || t("common.error"));
       return;
     }
     if (data.error) {
+      setBusy(false);
       toast.error(data.error);
       return;
     }
-    const endsAt = data.cancel_at ? new Date(data.cancel_at * 1000) : null;
-    if (endsAt) setCancelEndsAt(endsAt);
-    const dateStr = endsAt ? endsAt.toLocaleDateString() : "";
+    const newEndsAt = data.cancel_at ? new Date(data.cancel_at * 1000) : null;
+    if (newEndsAt) setCancelEndsAt(newEndsAt);
+    setCanceled(true);
+    // Persist the end date to the DB so it survives a reload
+    await supabase.functions.invoke("check-subscription");
+    await refresh();
+    setBusy(false);
+    const dateStr = newEndsAt ? newEndsAt.toLocaleDateString() : "";
     if (data.alreadyCanceled) {
       toast.info(t("profile.cancelAlready", { date: dateStr }));
     } else {
@@ -146,43 +171,58 @@ export default function Profile() {
             {!isPremium && <div className="text-sm opacity-90 mb-2">{t("profile.pricePerMonth")}</div>}
             {isPremium ? (
               <div className="flex flex-col gap-2 items-end">
+                {endsAt && (
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning/10 text-warning text-xs font-medium">
+                    <CalendarClock className="w-3.5 h-3.5" />
+                    {t("profile.cancelEndsOn", { date: endsAt.toLocaleDateString() })}
+                  </div>
+                )}
                 <Button variant="outline" size="sm" onClick={portal} disabled={busy}>
                   {t("profile.manageSub")}
                 </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={busy}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      {t("profile.cancelSub")}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>{t("profile.cancelConfirmTitle")}</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {t("profile.cancelConfirmDesc")}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>{t("profile.cancelKeep")}</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={cancel}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                {!canceled && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={busy}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
-                        {t("profile.cancelConfirm")}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                {cancelEndsAt && (
-                  <p className="text-xs text-muted-foreground">
-                    {t("profile.cancelEndsOn", { date: cancelEndsAt.toLocaleDateString() })}
-                  </p>
+                        <XCircle className="w-4 h-4" />
+                        {t("profile.cancelSub")}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                          <AlertTriangle className="w-5 h-5 text-warning" />
+                          {t("profile.cancelConfirmTitle")}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t("profile.cancelConfirmDesc")}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <ul className="space-y-2 text-sm text-foreground bg-secondary/60 rounded-lg p-4 -mt-2">
+                        {([1, 2, 3, 4, 5] as const).map((n) => (
+                          <li key={n} className="flex items-start gap-2">
+                            <XCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                            <span>{t(`profile.cancelDrawback${n}`)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={busy}>{t("profile.cancelKeep")}</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={cancel}
+                          disabled={busy}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {t("profile.cancelConfirm")}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
               </div>
             ) : (
