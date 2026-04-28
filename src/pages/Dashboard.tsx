@@ -85,6 +85,30 @@ export default function Dashboard() {
     return s;
   }, [transactions]);
 
+  // Premium-only: forecast, top category, daily avg, monthly trend
+  const premiumInsights = useMemo(() => {
+    if (monthData.count === 0) return null;
+    const now = new Date();
+    const dayOfMonth = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const avgDaily = monthData.expenses / Math.max(1, dayOfMonth);
+    const forecast = avgDaily * daysInMonth;
+    const sorted = Object.entries(monthData.byCat).sort((a, b) => b[1] - a[1]);
+    const top = sorted[0];
+    const topPct = top && monthData.expenses > 0 ? Math.round((top[1] / monthData.expenses) * 100) : 0;
+    // last month total
+    const lastMonthYm = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().slice(0, 7);
+    const lastMonthExp = transactions
+      .filter((t) => t.type === "expense" && t.occurred_on.startsWith(lastMonthYm))
+      .reduce((s, t) => s + Number(t.amount), 0);
+    let trend = "—";
+    if (lastMonthExp > 0) {
+      const diff = Math.round(((monthData.expenses - lastMonthExp) / lastMonthExp) * 100);
+      trend = diff >= 0 ? `+${diff}%` : `${diff}%`;
+    }
+    return { avgDaily, forecast, top, topPct, trend };
+  }, [monthData, transactions]);
+
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-6">
       <div className="flex items-end justify-between gap-4">
