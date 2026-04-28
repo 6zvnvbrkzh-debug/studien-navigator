@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2 } from "lucide-react";
 import { PremiumBadge } from "@/components/PremiumGate";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   summary: string;
@@ -22,11 +23,18 @@ export function AICoachCard({ summary, disabled }: Props) {
     setLoading(true);
     setResponse("");
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        toast.error(t("aiCoach.error"));
+        setLoading(false);
+        return;
+      }
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ summary }),
       });
