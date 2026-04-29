@@ -7,7 +7,7 @@ import { useRecurring } from "@/hooks/useRecurring";
 import { AICoachCard } from "@/components/AICoachCard";
 import { AddTransactionDialog } from "@/components/AddTransactionDialog";
 import { Card } from "@/components/ui/card";
-import { TrendingDown, TrendingUp, Sparkles, Target, Flame } from "lucide-react";
+import { TrendingDown, TrendingUp, Sparkles, Target, Flame, Plus } from "lucide-react";
 import { PremiumGate, PremiumBadge } from "@/components/PremiumGate";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
