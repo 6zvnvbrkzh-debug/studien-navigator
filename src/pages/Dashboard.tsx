@@ -157,9 +157,7 @@ export default function Dashboard() {
             {new Date().toLocaleDateString(undefined, { dateStyle: "long" })}
           </p>
         </div>
-        <div className="hidden sm:block">
-          <AddTransactionDialog />
-        </div>
+        <div className="hidden" />
       </div>
 
       {/* Budget summary */}
@@ -354,9 +352,21 @@ export default function Dashboard() {
         )}
       </Card>
 
-      {/* Mobile FAB */}
-      <div className="sm:hidden fixed bottom-24 right-4 z-20">
-        <AddTransactionDialog />
+      {/* Floating glass FAB */}
+      <div className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-30">
+        <AddTransactionDialog
+          trigger={
+            <button
+              aria-label="Transaktion hinzufügen"
+              className="group flex items-center gap-2 rounded-full px-5 py-3 sm:px-6 sm:py-3.5 text-sm font-semibold text-foreground bg-background/40 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.18)] hover:bg-background/60 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200"
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-inner">
+                <Plus className="w-4 h-4" />
+              </span>
+              <span className="hidden sm:inline">Transaktion hinzufügen</span>
+            </button>
+          }
+        />
       </div>
     </div>
   );
